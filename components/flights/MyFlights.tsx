@@ -20,6 +20,7 @@ interface Flight {
   booking_ref: string;
   created_at: string;
   is_round_trip: boolean;
+  user_id: string;
   profiles?: { email: string; full_name: string };
 }
 
@@ -47,8 +48,10 @@ export function MyFlights({ refreshKey }: { refreshKey: number }) {
       
       if (admin) {
         data = await getAllFlights();
+        console.log('Admin flights loaded:', data?.length);
       } else {
         data = await getUserFlights();
+        console.log('User flights loaded:', data?.length);
       }
       
       setFlights(data || []);
@@ -89,7 +92,7 @@ export function MyFlights({ refreshKey }: { refreshKey: number }) {
             <div className="flex items-center gap-2 text-purple-700">
               <AlertCircle size={20} />
               <span className="font-semibold">Admin Mode</span>
-              <span className="text-sm">Viewing all user flights</span>
+              <span className="text-sm">Viewing {flights.length} total flight{flights.length !== 1 ? 's' : ''}</span>
             </div>
             <button
               onClick={handleRefresh}
