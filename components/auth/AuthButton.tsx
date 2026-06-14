@@ -34,7 +34,7 @@ export function AuthButton() {
         </span>
         <button
           onClick={handleLogout}
-          className="flex items-center gap-2 px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded-lg"
+          className="flex items-center gap-2 px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
         >
           <LogOut size={16} />
           Logout
@@ -47,11 +47,13 @@ export function AuthButton() {
     <>
       <button
         onClick={() => setShowAuthModal(true)}
-        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
       >
         Sign In
       </button>
-      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+      {showAuthModal && (
+        <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+      )}
     </>
   );
 }
