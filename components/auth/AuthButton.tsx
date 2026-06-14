@@ -30,7 +30,7 @@ export function AuthButton() {
       <div className="flex items-center gap-4">
         <span className="text-sm text-gray-600">
           <User size={16} className="inline mr-1" />
-          {user.email}
+          {user.email?.split('@')[0]}
         </span>
         <button
           onClick={handleLogout}
