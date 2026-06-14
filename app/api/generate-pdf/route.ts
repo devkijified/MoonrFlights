@@ -9,7 +9,6 @@ export async function POST(request: NextRequest) {
     
     const supabase = await createClient();
     
-    // Get flight data
     const { data: flight, error } = await supabase
       .from('flights')
       .select('*')
@@ -20,18 +19,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Flight not found' }, { status: 404 });
     }
     
-    // Generate PDF
     const pdfBuffer = await renderToBuffer(<FlightPDF flight={flight} />);
     
-    // Upload to Supabase Storage (optional)
-    const fileName = `itinerary-${flight.booking_ref}.pdf`;
-    
-    // Return PDF as download
     return new NextResponse(pdfBuffer, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${fileName}"`,
+        'Content-Disposition': `attachment; filename="itinerary-${flight.booking_ref}.pdf"`,
       },
     });
     
