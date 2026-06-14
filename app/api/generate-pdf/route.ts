@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { generateFlightPDF } from '@/lib/pdf-generator';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,7 +11,6 @@ export async function POST(request: NextRequest) {
     
     const supabase = await createClient();
     
-    // Get flight data
     const { data: flight, error } = await supabase
       .from('flights')
       .select('*')
@@ -20,14 +18,13 @@ export async function POST(request: NextRequest) {
       .single();
     
     if (error || !flight) {
-      console.error('Flight not found:', error);
       return NextResponse.json({ error: 'Flight not found' }, { status: 404 });
     }
     
-    // Generate PDF
+    // Dynamic import to avoid build issues
+    const { generateFlightPDF } = await import('@/lib/pdf-generator');
     const pdfBuffer = await generateFlightPDF(flight);
     
-    // Return PDF as download
     return new NextResponse(pdfBuffer, {
       status: 200,
       headers: {
