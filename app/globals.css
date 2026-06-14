@@ -1,3 +1,20 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  /* Ensure proper box sizing */
+  * {
+    box-sizing: border-box;
+  }
+  
+  /* Fix for modal centering */
+  html, body {
+    height: 100%;
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+  }
+}
