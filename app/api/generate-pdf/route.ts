@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { renderToBuffer } from '@react-pdf/renderer';
+import { FlightPDF } from '@/components/flights/FlightPDF';
 
 export async function POST(request: NextRequest) {
   try {
@@ -7,6 +9,7 @@ export async function POST(request: NextRequest) {
     
     const supabase = await createClient();
     
+    // Get flight data
     const { data: flight, error } = await supabase
       .from('flights')
       .select('*')
@@ -17,30 +20,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Flight not found' }, { status: 404 });
     }
     
-    // Return flight data for now (PDF generation coming soon)
-    return NextResponse.json({
-      success: true,
-      message: 'PDF generation endpoint working',
-      flight: {
-        id: flight.id,
-        booking_ref: flight.booking_ref,
-        passenger_name: flight.passenger_name,
-        flight_number: flight.flight_number,
-        origin: flight.origin,
-        destination: flight.destination,
-        departure_date: flight.departure_date
-      }
+    // Generate PDF
+    const pdfBuffer = await renderToBuffer(<FlightPDF flight={flight} />);
+    
+    // Upload to Supabase Storage (optional)
+    const fileName = `itinerary-${flight.booking_ref}.pdf`;
+    
+    // Return PDF as download
+    return new NextResponse(pdfBuffer, {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${fileName}"`,
+      },
     });
     
   } catch (error) {
-    console.error('Error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('PDF Generation Error:', error);
+    return NextResponse.json({ error: 'Failed to generate PDF' }, { status: 500 });
   }
-}
-
-export async function GET() {
-  return NextResponse.json({ 
-    message: 'Generate PDF API endpoint. Use POST request with { flightId: "id" }',
-    status: 'ready'
-  });
 }
