@@ -49,12 +49,17 @@ export function MyFlights({ refreshKey }: { refreshKey: number }) {
       if (admin) {
         data = await getAllFlights();
         console.log('Admin flights loaded:', data?.length);
+        console.log('Flight data:', data);
       } else {
         data = await getUserFlights();
         console.log('User flights loaded:', data?.length);
       }
       
       setFlights(data || []);
+      
+      if (admin && (!data || data.length === 0)) {
+        toast.error('No flights found in database');
+      }
     } catch (error) {
       console.error('Error loading flights:', error);
       toast.error('Failed to load flights');
