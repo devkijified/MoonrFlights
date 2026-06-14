@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
+import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { X } from 'lucide-react';
 
@@ -17,6 +18,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [showResend, setShowResend] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     if (isOpen) {
@@ -37,12 +39,20 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     setShowResend(false);
 
     if (isLogin) {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({ 
+        email, 
+        password 
+      });
+      
       if (error) {
         toast.error(error.message);
+        setLoading(false);
       } else {
         toast.success('Welcome back!');
-        onClose();
+        setLoading(false);
+        onClose(); // Close modal
+        router.push('/dashboard'); // Redirect to dashboard
+        router.refresh(); // Refresh to update auth state
       }
     } else {
       const { error } = await supabase.auth.signUp({
@@ -53,6 +63,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           emailRedirectTo: `${window.location.origin}/dashboard`
         }
       });
+      
+      setLoading(false);
       
       if (error) {
         if (error.message.includes('already registered')) {
@@ -66,7 +78,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         onClose();
       }
     }
-    setLoading(false);
   };
 
   const resendConfirmation = async () => {
@@ -79,13 +90,13 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       }
     });
     
+    setLoading(false);
     if (error) {
       toast.error(error.message);
     } else {
       toast.success('Confirmation email resent! Check your inbox.');
       setShowResend(false);
     }
-    setLoading(false);
   };
 
   return (
