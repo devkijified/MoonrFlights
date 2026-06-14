@@ -16,8 +16,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showResend, setShowResend] = useState(false);
 
-  // Prevent scrolling when modal is open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -34,6 +34,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setShowResend(false);
 
     if (isLogin) {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -47,10 +48,19 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { full_name: fullName } }
+        options: { 
+          data: { full_name: fullName },
+          emailRedirectTo: `${window.location.origin}/dashboard`
+        }
       });
+      
       if (error) {
-        toast.error(error.message);
+        if (error.message.includes('already registered')) {
+          setShowResend(true);
+          toast.error('Email already registered. Try logging in or resend confirmation.');
+        } else {
+          toast.error(error.message);
+        }
       } else {
         toast.success('Check your email to confirm your account!');
         onClose();
@@ -59,18 +69,34 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     setLoading(false);
   };
 
+  const resendConfirmation = async () => {
+    setLoading(true);
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/dashboard`
+      }
+    });
+    
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success('Confirmation email resent! Check your inbox.');
+      setShowResend(false);
+    }
+    setLoading(false);
+  };
+
   return (
     <div className="fixed inset-0 z-[9999]">
-      {/* Backdrop */}
       <div 
         className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
       
-      {/* Modal Container */}
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full mx-auto animate-in fade-in zoom-in duration-200">
-          {/* Close button */}
+        <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full mx-auto">
           <button
             onClick={onClose}
             className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors z-10 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"
@@ -128,6 +154,22 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 />
               </div>
               
+              {showResend && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                  <p className="text-sm text-yellow-800 mb-2">
+                    Need a new confirmation link?
+                  </p>
+                  <button
+                    type="button"
+                    onClick={resendConfirmation}
+                    disabled={loading}
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    Resend confirmation email →
+                  </button>
+                </div>
+              )}
+              
               <button
                 type="submit"
                 disabled={loading}
@@ -140,7 +182,10 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             <p className="mt-6 text-center text-sm text-gray-600">
               {isLogin ? "Don't have an account? " : "Already have an account? "}
               <button
-                onClick={() => setIsLogin(!isLogin)}
+                onClick={() => {
+                  setIsLogin(!isLogin);
+                  setShowResend(false);
+                }}
                 className="text-blue-600 hover:underline font-medium"
               >
                 {isLogin ? 'Sign Up' : 'Sign In'}
