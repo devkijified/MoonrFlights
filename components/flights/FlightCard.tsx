@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
-import { Calendar, MapPin, Download, Trash2, Plane } from 'lucide-react';
+import { Calendar, MapPin, Download, Trash2, Plane, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 
@@ -28,23 +28,36 @@ export function FlightCard({ flight, isAdmin, onDelete, onRefresh }: FlightCardP
       
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to generate PDF');
+        throw new Error(error.error || 'Failed to generate itinerary');
       }
       
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `itinerary-${flight.booking_ref}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      toast.success('PDF downloaded successfully!');
+      // Get the HTML response
+      const html = await response.text();
+      
+      // Create a new window and write the HTML
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(html);
+        printWindow.document.close();
+        toast.success('Itinerary opened! Use Ctrl+P (Cmd+P on Mac) to save as PDF');
+      } else {
+        // Fallback: create a blob and download as HTML
+        const blob = new Blob([html], { type: 'text/html' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `itinerary-${flight.booking_ref}.html`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        toast.success('Itinerary saved! Open and press Ctrl+P to save as PDF');
+      }
+      
       onRefresh?.();
     } catch (error: any) {
       console.error('PDF Error:', error);
-      toast.error(error.message || 'Failed to generate PDF');
+      toast.error(error.message || 'Failed to generate itinerary');
     } finally {
       setDownloading(false);
     }
@@ -167,8 +180,17 @@ export function FlightCard({ flight, isAdmin, onDelete, onRefresh }: FlightCardP
             disabled={downloading}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
           >
-            <Download size={18} />
-            {downloading ? 'Generating PDF...' : 'Download PDF'}
+            {downloading ? (
+              <>
+                <Loader2 size={18} className="animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Download size={18} />
+                Download Itinerary
+              </>
+            )}
           </button>
           
           <button
@@ -176,16 +198,14 @@ export function FlightCard({ flight, isAdmin, onDelete, onRefresh }: FlightCardP
             disabled={deleting}
             className="px-4 py-2.5 border border-red-300 text-red-600 rounded-lg font-medium hover:bg-red-50 hover:border-red-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
           >
-            <Trash2 size={18} />
+            {deleting ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
           </button>
         </div>
       </div>
       
       {/* Footer Disclaimer */}
       <div className="bg-yellow-50 px-6 py-3 border-t border-yellow-100">
-        <p className="text-xs text-yellow-700 text-center">
-          ⚠️ DOCUMENTATION ONLY - Not a real ticket. Cannot be used for boarding.
-        </p>
+       
       </div>
     </div>
   );
