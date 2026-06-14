@@ -1,21 +1,11 @@
 'use client';
 
-import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
-
-// Register fonts
-Font.register({
-  family: 'Helvetica',
-  fonts: [
-    { src: 'https://fonts.cdnfonts.com/css/helvetica-2', fontWeight: 'normal' },
-    { src: 'https://fonts.cdnfonts.com/css/helvetica-2', fontWeight: 'bold' },
-  ],
-});
+import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 
 const styles = StyleSheet.create({
   page: {
     padding: 40,
     backgroundColor: '#FFFFFF',
-    fontFamily: 'Helvetica',
   },
   header: {
     flexDirection: 'row',
@@ -33,7 +23,6 @@ const styles = StyleSheet.create({
   docType: {
     fontSize: 12,
     color: '#666',
-    textAlign: 'right',
   },
   confirmationBox: {
     backgroundColor: '#f3f4f6',
@@ -42,7 +31,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   flightCard: {
-    backgroundColor: '#ffffff',
     borderWidth: 1,
     borderColor: '#e5e7eb',
     borderRadius: 12,
@@ -142,7 +130,6 @@ const styles = StyleSheet.create({
 });
 
 interface FlightData {
-  id: string;
   booking_ref: string;
   passenger_name: string;
   passenger_email: string;
@@ -162,7 +149,6 @@ interface FlightData {
 export function FlightPDF({ flight }: { flight: FlightData }) {
   const departureDate = new Date(flight.departure_date);
   const formattedDate = departureDate.toLocaleDateString('en-US', {
-    weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -223,46 +209,6 @@ export function FlightPDF({ flight }: { flight: FlightData }) {
           </View>
         </View>
 
-        {/* Return Flight if Round Trip */}
-        {flight.is_round_trip && flight.return_date && (
-          <View style={styles.flightCard}>
-            <View style={styles.airlineRow}>
-              <Text style={styles.airlineName}>{flight.airline}</Text>
-              <Text style={styles.flightNumber}>{flight.flight_number}</Text>
-            </View>
-
-            <View style={styles.airportRow}>
-              <View>
-                <Text style={styles.airportCode}>{flight.destination_airport}</Text>
-                <Text style={styles.airportCity}>{flight.destination}</Text>
-              </View>
-              <Text style={{ fontSize: 20 }}>✈️</Text>
-              <View style={{ alignItems: 'flex-end' }}>
-                <Text style={styles.airportCode}>{flight.origin_airport}</Text>
-                <Text style={styles.airportCity}>{flight.origin}</Text>
-              </View>
-            </View>
-
-            <View style={styles.timeRow}>
-              <View>
-                <Text style={styles.timeLabel}>Return Departure</Text>
-                <Text style={styles.timeValue}>{flight.departure_time || '12:00'}</Text>
-                <Text style={styles.timeLabel}>
-                  {new Date(flight.return_date).toLocaleDateString()}
-                </Text>
-              </View>
-              <View>
-                <Text style={styles.timeLabel}>Class</Text>
-                <Text style={styles.timeValue}>Economy</Text>
-              </View>
-              <View style={{ alignItems: 'flex-end' }}>
-                <Text style={styles.timeLabel}>Gate</Text>
-                <Text style={styles.timeValue}>B24</Text>
-              </View>
-            </View>
-          </View>
-        )}
-
         {/* Passenger Info */}
         <View style={styles.passengerInfo}>
           <View style={styles.passengerRow}>
@@ -271,7 +217,7 @@ export function FlightPDF({ flight }: { flight: FlightData }) {
           </View>
           <View style={styles.passengerRow}>
             <Text style={styles.passengerLabel}>Email:</Text>
-            <Text style={styles.passengerValue}>{flight.passenger_email}</Text>
+            <Text style={styles.passengerValue}>{flight.passenger_email || 'Not provided'}</Text>
           </View>
           <View style={styles.passengerRow}>
             <Text style={styles.passengerLabel}>Ticket Type:</Text>
