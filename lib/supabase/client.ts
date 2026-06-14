@@ -32,10 +32,36 @@ export async function getUserFlights() {
 }
 
 export async function getAllFlights() {
-  const { data } = await supabase
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+  
+  // First check if user is admin
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('is_admin')
+    .eq('id', user.id)
+    .single()
+  
+  if (!profile?.is_admin) {
+    return []
+  }
+  
+  // Fetch all flights with user profile information
+  const { data, error } = await supabase
     .from('flights')
-    .select('*, profiles(email, full_name)')
+    .select(`
+      *,
+      profiles:user_id (
+        email,
+        full_name
+      )
+    `)
     .order('created_at', { ascending: false })
+  
+  if (error) {
+    console.error('Error fetching all flights:', error)
+    return []
+  }
   
   return data || []
 }
