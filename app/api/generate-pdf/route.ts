@@ -17,15 +17,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Flight not found' }, { status: 404 });
     }
     
-    // For now, return a message that PDF generation is coming
-    // We'll implement actual PDF generation next
+    // Return flight data for now (PDF generation coming soon)
     return NextResponse.json({
       success: true,
-      message: 'PDF generation will be implemented in the next step',
-      flight: flight
+      message: 'PDF generation endpoint working',
+      flight: {
+        id: flight.id,
+        booking_ref: flight.booking_ref,
+        passenger_name: flight.passenger_name,
+        flight_number: flight.flight_number,
+        origin: flight.origin,
+        destination: flight.destination,
+        departure_date: flight.departure_date
+      }
     });
     
   } catch (error) {
+    console.error('Error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
+}
+
+export async function GET() {
+  return NextResponse.json({ 
+    message: 'Generate PDF API endpoint. Use POST request with { flightId: "id" }',
+    status: 'ready'
+  });
 }
