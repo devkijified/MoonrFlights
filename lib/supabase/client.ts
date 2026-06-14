@@ -46,16 +46,10 @@ export async function getAllFlights() {
     return []
   }
   
-  // Fetch all flights with user profile information
+  // Fetch all flights - simple query without join
   const { data, error } = await supabase
     .from('flights')
-    .select(`
-      *,
-      profiles:user_id (
-        email,
-        full_name
-      )
-    `)
+    .select('*')
     .order('created_at', { ascending: false })
   
   if (error) {
@@ -63,5 +57,18 @@ export async function getAllFlights() {
     return []
   }
   
-  return data || []
+  // Get user emails separately
+  const userIds = [...new Set(data?.map(flight => flight.user_id) || [])]
+  const { data: users } = await supabase
+    .from('profiles')
+    .select('id, email, full_name')
+    .in('id', userIds)
+  
+  // Merge user data into flights
+  const flightsWithUsers = data?.map(flight => ({
+    ...flight,
+    profiles: users?.find(user => user.id === flight.user_id)
+  })) || []
+  
+  return flightsWithUsers
 }
