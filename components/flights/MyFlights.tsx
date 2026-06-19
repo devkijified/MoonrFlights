@@ -36,14 +36,13 @@ export function MyFlights({ refreshKey }: { refreshKey: number }) {
         console.log('User flights loaded:', data?.length);
       }
       
+      // Ensure data is an array
       setFlights(data || []);
       
-      if (admin && (!data || data.length === 0)) {
-        toast.error('No flights found in database');
-      }
     } catch (error) {
       console.error('Error loading flights:', error);
       toast.error('Failed to load flights');
+      setFlights([]);
     } finally {
       setLoading(false);
     }
@@ -69,6 +68,9 @@ export function MyFlights({ refreshKey }: { refreshKey: number }) {
     );
   }
 
+  // Count flights properly
+  const flightCount = flights?.length || 0;
+
   return (
     <div className="space-y-6">
       {/* Admin Banner */}
@@ -78,7 +80,7 @@ export function MyFlights({ refreshKey }: { refreshKey: number }) {
             <div className="flex items-center gap-2 text-purple-700">
               <AlertCircle size={20} />
               <span className="font-semibold">Admin Mode</span>
-              <span className="text-sm">Viewing {flights.length} total flight{flights.length !== 1 ? 's' : ''}</span>
+              <span className="text-sm">Viewing {flightCount} total flight{flightCount !== 1 ? 's' : ''}</span>
             </div>
             <button
               onClick={handleRefresh}
@@ -93,12 +95,12 @@ export function MyFlights({ refreshKey }: { refreshKey: number }) {
       )}
       
       {/* Stats */}
-      {flights.length > 0 && (
+      {flightCount > 0 && (
         <div className="bg-white rounded-lg px-4 py-3 shadow-sm border border-gray-200">
           <div className="flex justify-between items-center">
             <div>
               <span className="text-sm text-gray-500">Total Flights</span>
-              <p className="text-2xl font-bold text-gray-900">{flights.length}</p>
+              <p className="text-2xl font-bold text-gray-900">{flightCount}</p>
             </div>
             <button
               onClick={handleRefresh}
@@ -113,7 +115,7 @@ export function MyFlights({ refreshKey }: { refreshKey: number }) {
       )}
       
       {/* Flight List */}
-      {flights.length === 0 ? (
+      {flightCount === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl shadow-sm">
           <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Plane size={40} className="text-gray-400" />
