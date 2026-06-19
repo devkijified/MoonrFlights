@@ -5,6 +5,17 @@ export async function GET(request: NextRequest) {
   try {
     console.log('🧪 Test endpoint called');
     
+    // Check environment variables
+    const envCheck = {
+      supabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      supabaseUrlValue: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 20) + '...',
+      serviceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      serviceRoleKeyValue: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) + '...',
+      anonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    };
+    
+    console.log('📦 Environment check:', envCheck);
+    
     const supabase = await createClient();
     
     // Test 1: Check authentication
@@ -14,11 +25,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ 
         success: false,
         test: 'auth',
-        error: authError.message 
+        error: authError.message,
+        env: envCheck
       }, { status: 401 });
     }
     
-    // Test 2: Check database connection
+    // Test 2: Check database connection - try a simple query
     const { data: tables, error: dbError } = await supabase
       .from('flights')
       .select('count', { count: 'exact', head: true });
@@ -29,11 +41,9 @@ export async function GET(request: NextRequest) {
       database: {
         connected: !dbError,
         flightCount: tables?.count || 0,
+        dbError: dbError?.message || null
       },
-      environment: {
-        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Set' : 'Not set',
-        hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      },
+      environment: envCheck,
       timestamp: new Date().toISOString()
     });
     
@@ -41,7 +51,8 @@ export async function GET(request: NextRequest) {
     console.error('Test error:', error);
     return NextResponse.json({ 
       success: false, 
-      error: error.message 
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     }, { status: 500 });
   }
 }
