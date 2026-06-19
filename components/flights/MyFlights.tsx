@@ -6,26 +6,8 @@ import { FlightCard } from './FlightCard';
 import { Plane, AlertCircle, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-interface Flight {
-  id: string;
-  flight_number: string;
-  airline: string;
-  origin: string;
-  origin_airport: string;
-  destination: string;
-  destination_airport: string;
-  departure_date: string;
-  passenger_name: string;
-  passenger_email: string;
-  booking_ref: string;
-  created_at: string;
-  is_round_trip: boolean;
-  user_id: string;
-  profiles?: { email: string; full_name: string };
-}
-
 export function MyFlights({ refreshKey }: { refreshKey: number }) {
-  const [flights, setFlights] = useState<Flight[]>([]);
+  const [flights, setFlights] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [adminMode, setAdminMode] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -49,7 +31,6 @@ export function MyFlights({ refreshKey }: { refreshKey: number }) {
       if (admin) {
         data = await getAllFlights();
         console.log('Admin flights loaded:', data?.length);
-        console.log('Flight data:', data);
       } else {
         data = await getUserFlights();
         console.log('User flights loaded:', data?.length);
