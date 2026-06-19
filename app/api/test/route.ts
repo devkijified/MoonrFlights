@@ -1,4 +1,3 @@
-// app/api/test/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
@@ -13,45 +12,48 @@ export async function GET(request: NextRequest) {
       anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Set' : 'Not set',
     };
     
-    console.log('📦 Environment check:', envCheck);
-    
     const supabase = await createClient();
     
     // Test 1: Check authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
-    if (authError) {
+    if (authError || !user) {
       return NextResponse.json({ 
         success: false,
         test: 'auth',
-        error: authError.message,
+        error: authError?.message || 'No user found',
         env: envCheck
       }, { status: 401 });
     }
     
-    // Test 2: Try to insert a test flight
+    // Test 2: Try to insert a test flight with correct column names
     const testBookingRef = `TEST-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
     const testPnr = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const today = new Date().toISOString().split('T')[0];
+    
+    const testFlight = {
+      user_id: user.id,
+      pnr_code: testPnr,
+      booking_ref: testBookingRef,
+      airline: 'Test Airline',
+      airline_code: 'TA',
+      flight_number: 'TEST123',
+      flight_date: today,  // ← Using flight_date
+      flight_time: '12:00',
+      origin: 'Test City',
+      origin_airport: 'TST',
+      destination: 'Test Destination',
+      destination_airport: 'DST',
+      passenger1_name: 'Test User',
+      contact_email: user.email,
+      status: 'confirmed',
+    };
+    
+    console.log('📝 Test insert data:', testFlight);
     
     const { data: insertData, error: insertError } = await supabase
       .from('flights')
-      .insert({
-        user_id: user.id,
-        pnr_code: testPnr,
-        booking_ref: testBookingRef,
-        airline: 'Test Airline',
-        airline_code: 'TA',
-        flight_number: 'TEST123',
-        flight_date: new Date().toISOString().split('T')[0],
-        flight_time: '12:00',
-        origin: 'Test City',
-        origin_airport: 'TST',
-        destination: 'Test Destination',
-        destination_airport: 'DST',
-        passenger1_name: 'Test User',
-        contact_email: user.email,
-        status: 'confirmed',
-      })
+      .insert(testFlight)
       .select()
       .single();
     
@@ -68,9 +70,9 @@ export async function GET(request: NextRequest) {
     }
     
     // Test 3: Count flights
-    const { data: countData, error: countError } = await supabase
+    const { count, error: countError } = await supabase
       .from('flights')
-      .select('id', { count: 'exact', head: true });
+      .select('*', { count: 'exact', head: true });
     
     return NextResponse.json({
       success: true,
@@ -84,7 +86,7 @@ export async function GET(request: NextRequest) {
       },
       database: {
         connected: !countError,
-        flightCount: countData?.length || 0,
+        flightCount: count || 0,
       },
       timestamp: new Date().toISOString()
     });
