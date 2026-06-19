@@ -1,3 +1,4 @@
+// lib/gds/sabre-client.ts
 import axios from 'axios';
 
 interface SabreToken {
@@ -17,7 +18,7 @@ export class SabreClient {
     this.baseUrl = process.env.SABRE_API_URL || 'https://api.test.sabre.com';
     this.clientId = process.env.SABRE_CLIENT_ID || '';
     this.clientSecret = process.env.SABRE_CLIENT_SECRET || '';
-    this.pcc = process.env.SABRE_PCC || 'XXXX'; // Default test PCC
+    this.pcc = process.env.SABRE_PCC || 'XXXX';
   }
 
   async getToken(): Promise<string> {
@@ -62,7 +63,6 @@ export class SabreClient {
   }) {
     const token = await this.getToken();
 
-    // Format the PNR request for Sabre
     const requestBody = {
       CreatePassengerNameRecordRQ: {
         version: '1.0.0',
@@ -126,7 +126,6 @@ export class SabreClient {
         }
       );
 
-      // Extract PNR from response
       const pnrCode = response.data?.CreatePassengerNameRecordRS?.ItineraryRef?.ID || 
                       response.data?.id || 
                       `SAB${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
@@ -141,7 +140,6 @@ export class SabreClient {
     } catch (error: any) {
       console.error('Sabre PNR creation error:', error.response?.data || error.message);
       
-      // Return a simulated PNR for testing when Sabre is unavailable
       return {
         pnrCode: `TEST${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
         bookingRef: `MOON-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
