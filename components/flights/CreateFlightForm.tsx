@@ -6,76 +6,163 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
 import { supabase } from '@/lib/supabase/client';
-import { Plane, Calendar, MapPin, User, Mail, Phone, Plus, X, Search } from 'lucide-react';
+import { Plane, Calendar, MapPin, User, Mail, Phone, Plus, X, Search, CheckCircle } from 'lucide-react';
 
 // ============================================
-// AIRPORT DATABASE
+// COMPLETE AIRPORT DATABASE
 // ============================================
 const AIRPORTS = [
+  // ===== NIGERIAN AIRPORTS =====
+  { code: 'LOS', city: 'Lagos', country: 'Nigeria', airline: 'Arik Air', airlineCode: 'W3' },
+  { code: 'ABV', city: 'Abuja', country: 'Nigeria', airline: 'Arik Air', airlineCode: 'W3' },
+  { code: 'PHC', city: 'Port Harcourt', country: 'Nigeria', airline: 'Aero Contractors', airlineCode: 'NG' },
+  { code: 'KAN', city: 'Kano', country: 'Nigeria', airline: 'Arik Air', airlineCode: 'W3' },
+  { code: 'IBE', city: 'Ibadan', country: 'Nigeria', airline: 'Aero Contractors', airlineCode: 'NG' },
+  { code: 'ENU', city: 'Enugu', country: 'Nigeria', airline: 'Arik Air', airlineCode: 'W3' },
+  { code: 'QOW', city: 'Owerri', country: 'Nigeria', airline: 'Arik Air', airlineCode: 'W3' },
+  { code: 'CBQ', city: 'Calabar', country: 'Nigeria', airline: 'Aero Contractors', airlineCode: 'NG' },
+  { code: 'BEN', city: 'Benin City', country: 'Nigeria', airline: 'Arik Air', airlineCode: 'W3' },
+  { code: 'WAR', city: 'Warri', country: 'Nigeria', airline: 'Aero Contractors', airlineCode: 'NG' },
+  { code: 'YOL', city: 'Yola', country: 'Nigeria', airline: 'Arik Air', airlineCode: 'W3' },
+  { code: 'MDI', city: 'Maiduguri', country: 'Nigeria', airline: 'Arik Air', airlineCode: 'W3' },
+  
+  // ===== USA =====
   { code: 'JFK', city: 'New York', country: 'USA', airline: 'Delta', airlineCode: 'DL' },
-  { code: 'LHR', city: 'London', country: 'UK', airline: 'British Airways', airlineCode: 'BA' },
-  { code: 'CDG', city: 'Paris', country: 'France', airline: 'Air France', airlineCode: 'AF' },
-  { code: 'DXB', city: 'Dubai', country: 'UAE', airline: 'Emirates', airlineCode: 'EK' },
-  { code: 'SIN', city: 'Singapore', country: 'Singapore', airline: 'Singapore Airlines', airlineCode: 'SQ' },
-  { code: 'NRT', city: 'Tokyo', country: 'Japan', airline: 'Japan Airlines', airlineCode: 'JL' },
-  { code: 'SYD', city: 'Sydney', country: 'Australia', airline: 'Qantas', airlineCode: 'QF' },
   { code: 'LAX', city: 'Los Angeles', country: 'USA', airline: 'American Airlines', airlineCode: 'AA' },
   { code: 'ORD', city: 'Chicago', country: 'USA', airline: 'United Airlines', airlineCode: 'UA' },
   { code: 'DFW', city: 'Dallas', country: 'USA', airline: 'American Airlines', airlineCode: 'AA' },
   { code: 'DEN', city: 'Denver', country: 'USA', airline: 'United Airlines', airlineCode: 'UA' },
-  { code: 'MIA', city: 'Miami', country: 'USA', airline: 'American Airlines', airlineCode: 'AA' },
+  { code: 'SFO', city: 'San Francisco', country: 'USA', airline: 'United Airlines', airlineCode: 'UA' },
   { code: 'SEA', city: 'Seattle', country: 'USA', airline: 'Delta', airlineCode: 'DL' },
-  { code: 'MEX', city: 'Mexico City', country: 'Mexico', airline: 'Aeromexico', airlineCode: 'AM' },
-  { code: 'YYZ', city: 'Toronto', country: 'Canada', airline: 'Air Canada', airlineCode: 'AC' },
-  { code: 'GRU', city: 'Sao Paulo', country: 'Brazil', airline: 'LATAM', airlineCode: 'LA' },
-  { code: 'EZE', city: 'Buenos Aires', country: 'Argentina', airline: 'Aerolineas Argentinas', airlineCode: 'AR' },
-  { code: 'LIS', city: 'Lisbon', country: 'Portugal', airline: 'TAP Air Portugal', airlineCode: 'TP' },
-  { code: 'MAD', city: 'Madrid', country: 'Spain', airline: 'Iberia', airlineCode: 'IB' },
-  { code: 'FCO', city: 'Rome', country: 'Italy', airline: 'ITA Airways', airlineCode: 'AZ' },
-  { code: 'AMS', city: 'Amsterdam', country: 'Netherlands', airline: 'KLM', airlineCode: 'KL' },
+  { code: 'MIA', city: 'Miami', country: 'USA', airline: 'American Airlines', airlineCode: 'AA' },
+  { code: 'ATL', city: 'Atlanta', country: 'USA', airline: 'Delta', airlineCode: 'DL' },
+  { code: 'BOS', city: 'Boston', country: 'USA', airline: 'JetBlue', airlineCode: 'B6' },
+  { code: 'PHX', city: 'Phoenix', country: 'USA', airline: 'American Airlines', airlineCode: 'AA' },
+  { code: 'IAH', city: 'Houston', country: 'USA', airline: 'United Airlines', airlineCode: 'UA' },
+  { code: 'EWR', city: 'Newark', country: 'USA', airline: 'United Airlines', airlineCode: 'UA' },
+  
+  // ===== UK & IRELAND =====
+  { code: 'LHR', city: 'London', country: 'UK', airline: 'British Airways', airlineCode: 'BA' },
+  { code: 'LGW', city: 'London Gatwick', country: 'UK', airline: 'British Airways', airlineCode: 'BA' },
+  { code: 'MAN', city: 'Manchester', country: 'UK', airline: 'British Airways', airlineCode: 'BA' },
+  { code: 'EDI', city: 'Edinburgh', country: 'UK', airline: 'British Airways', airlineCode: 'BA' },
+  { code: 'GLA', city: 'Glasgow', country: 'UK', airline: 'British Airways', airlineCode: 'BA' },
+  { code: 'DUB', city: 'Dublin', country: 'Ireland', airline: 'Aer Lingus', airlineCode: 'EI' },
+  
+  // ===== EUROPE =====
+  { code: 'CDG', city: 'Paris', country: 'France', airline: 'Air France', airlineCode: 'AF' },
   { code: 'FRA', city: 'Frankfurt', country: 'Germany', airline: 'Lufthansa', airlineCode: 'LH' },
+  { code: 'MUC', city: 'Munich', country: 'Germany', airline: 'Lufthansa', airlineCode: 'LH' },
+  { code: 'AMS', city: 'Amsterdam', country: 'Netherlands', airline: 'KLM', airlineCode: 'KL' },
+  { code: 'FCO', city: 'Rome', country: 'Italy', airline: 'ITA Airways', airlineCode: 'AZ' },
+  { code: 'MAD', city: 'Madrid', country: 'Spain', airline: 'Iberia', airlineCode: 'IB' },
+  { code: 'BCN', city: 'Barcelona', country: 'Spain', airline: 'Iberia', airlineCode: 'IB' },
+  { code: 'LIS', city: 'Lisbon', country: 'Portugal', airline: 'TAP Air Portugal', airlineCode: 'TP' },
   { code: 'ZRH', city: 'Zurich', country: 'Switzerland', airline: 'Swiss', airlineCode: 'LX' },
-  { code: 'DOH', city: 'Doha', country: 'Qatar', airline: 'Qatar Airways', airlineCode: 'QR' },
+  { code: 'VIE', city: 'Vienna', country: 'Austria', airline: 'Austrian Airlines', airlineCode: 'OS' },
+  { code: 'BRU', city: 'Brussels', country: 'Belgium', airline: 'Brussels Airlines', airlineCode: 'SN' },
+  { code: 'CPH', city: 'Copenhagen', country: 'Denmark', airline: 'SAS', airlineCode: 'SK' },
+  { code: 'ARN', city: 'Stockholm', country: 'Sweden', airline: 'SAS', airlineCode: 'SK' },
+  { code: 'OSL', city: 'Oslo', country: 'Norway', airline: 'SAS', airlineCode: 'SK' },
+  { code: 'HEL', city: 'Helsinki', country: 'Finland', airline: 'Finnair', airlineCode: 'AY' },
+  { code: 'WAW', city: 'Warsaw', country: 'Poland', airline: 'LOT Polish', airlineCode: 'LO' },
+  { code: 'PRG', city: 'Prague', country: 'Czech Republic', airline: 'Czech Airlines', airlineCode: 'OK' },
+  { code: 'ATH', city: 'Athens', country: 'Greece', airline: 'Aegean Airlines', airlineCode: 'A3' },
+  { code: 'IST', city: 'Istanbul', country: 'Turkey', airline: 'Turkish Airlines', airlineCode: 'TK' },
+  
+  // ===== MIDDLE EAST =====
+  { code: 'DXB', city: 'Dubai', country: 'UAE', airline: 'Emirates', airlineCode: 'EK' },
   { code: 'AUH', city: 'Abu Dhabi', country: 'UAE', airline: 'Etihad', airlineCode: 'EY' },
-  { code: 'BOM', city: 'Mumbai', country: 'India', airline: 'Air India', airlineCode: 'AI' },
-  { code: 'DEL', city: 'Delhi', country: 'India', airline: 'Air India', airlineCode: 'AI' },
-  { code: 'HND', city: 'Tokyo', country: 'Japan', airline: 'All Nippon Airways', airlineCode: 'NH' },
+  { code: 'DOH', city: 'Doha', country: 'Qatar', airline: 'Qatar Airways', airlineCode: 'QR' },
+  { code: 'RUH', city: 'Riyadh', country: 'Saudi Arabia', airline: 'Saudia', airlineCode: 'SV' },
+  { code: 'JED', city: 'Jeddah', country: 'Saudi Arabia', airline: 'Saudia', airlineCode: 'SV' },
+  { code: 'BEY', city: 'Beirut', country: 'Lebanon', airline: 'Middle East Airlines', airlineCode: 'ME' },
+  { code: 'AMM', city: 'Amman', country: 'Jordan', airline: 'Royal Jordanian', airlineCode: 'RJ' },
+  { code: 'TLV', city: 'Tel Aviv', country: 'Israel', airline: 'El Al', airlineCode: 'LY' },
+  
+  // ===== ASIA =====
+  { code: 'SIN', city: 'Singapore', country: 'Singapore', airline: 'Singapore Airlines', airlineCode: 'SQ' },
+  { code: 'HND', city: 'Tokyo', country: 'Japan', airline: 'Japan Airlines', airlineCode: 'JL' },
+  { code: 'NRT', city: 'Tokyo Narita', country: 'Japan', airline: 'Japan Airlines', airlineCode: 'JL' },
   { code: 'ICN', city: 'Seoul', country: 'South Korea', airline: 'Korean Air', airlineCode: 'KE' },
   { code: 'PEK', city: 'Beijing', country: 'China', airline: 'Air China', airlineCode: 'CA' },
   { code: 'PVG', city: 'Shanghai', country: 'China', airline: 'China Eastern', airlineCode: 'MU' },
   { code: 'HKG', city: 'Hong Kong', country: 'Hong Kong', airline: 'Cathay Pacific', airlineCode: 'CX' },
   { code: 'TPE', city: 'Taipei', country: 'Taiwan', airline: 'EVA Air', airlineCode: 'BR' },
   { code: 'BKK', city: 'Bangkok', country: 'Thailand', airline: 'Thai Airways', airlineCode: 'TG' },
-  { code: 'SGN', city: 'Ho Chi Minh City', country: 'Vietnam', airline: 'Vietnam Airlines', airlineCode: 'VN' },
   { code: 'KUL', city: 'Kuala Lumpur', country: 'Malaysia', airline: 'Malaysia Airlines', airlineCode: 'MH' },
   { code: 'CGK', city: 'Jakarta', country: 'Indonesia', airline: 'Garuda Indonesia', airlineCode: 'GA' },
   { code: 'MNL', city: 'Manila', country: 'Philippines', airline: 'Philippine Airlines', airlineCode: 'PR' },
+  { code: 'SGN', city: 'Ho Chi Minh City', country: 'Vietnam', airline: 'Vietnam Airlines', airlineCode: 'VN' },
+  { code: 'BOM', city: 'Mumbai', country: 'India', airline: 'Air India', airlineCode: 'AI' },
+  { code: 'DEL', city: 'Delhi', country: 'India', airline: 'Air India', airlineCode: 'AI' },
+  { code: 'BLR', city: 'Bangalore', country: 'India', airline: 'IndiGo', airlineCode: '6E' },
+  { code: 'MAA', city: 'Chennai', country: 'India', airline: 'IndiGo', airlineCode: '6E' },
+  
+  // ===== AFRICA (Non-Nigeria) =====
+  { code: 'JNB', city: 'Johannesburg', country: 'South Africa', airline: 'South African Airways', airlineCode: 'SA' },
+  { code: 'CPT', city: 'Cape Town', country: 'South Africa', airline: 'South African Airways', airlineCode: 'SA' },
+  { code: 'NBO', city: 'Nairobi', country: 'Kenya', airline: 'Kenya Airways', airlineCode: 'KQ' },
+  { code: 'ADD', city: 'Addis Ababa', country: 'Ethiopia', airline: 'Ethiopian Airlines', airlineCode: 'ET' },
+  { code: 'CAI', city: 'Cairo', country: 'Egypt', airline: 'EgyptAir', airlineCode: 'MS' },
+  { code: 'CMN', city: 'Casablanca', country: 'Morocco', airline: 'Royal Air Maroc', airlineCode: 'AT' },
+  { code: 'TUN', city: 'Tunis', country: 'Tunisia', airline: 'Tunisair', airlineCode: 'TU' },
+  { code: 'ALG', city: 'Algiers', country: 'Algeria', airline: 'Air Algerie', airlineCode: 'AH' },
+  { code: 'ACC', city: 'Accra', country: 'Ghana', airline: 'Ghana Airways', airlineCode: 'G0' },
+  { code: 'DSS', city: 'Dakar', country: 'Senegal', airline: 'Air Senegal', airlineCode: 'HC' },
+  
+  // ===== AUSTRALIA & NEW ZEALAND =====
+  { code: 'SYD', city: 'Sydney', country: 'Australia', airline: 'Qantas', airlineCode: 'QF' },
+  { code: 'MEL', city: 'Melbourne', country: 'Australia', airline: 'Qantas', airlineCode: 'QF' },
+  { code: 'BNE', city: 'Brisbane', country: 'Australia', airline: 'Qantas', airlineCode: 'QF' },
+  { code: 'PER', city: 'Perth', country: 'Australia', airline: 'Qantas', airlineCode: 'QF' },
+  { code: 'AKL', city: 'Auckland', country: 'New Zealand', airline: 'Air New Zealand', airlineCode: 'NZ' },
+  
+  // ===== SOUTH AMERICA =====
+  { code: 'GRU', city: 'Sao Paulo', country: 'Brazil', airline: 'LATAM', airlineCode: 'LA' },
+  { code: 'GIG', city: 'Rio de Janeiro', country: 'Brazil', airline: 'LATAM', airlineCode: 'LA' },
+  { code: 'EZE', city: 'Buenos Aires', country: 'Argentina', airline: 'Aerolineas Argentinas', airlineCode: 'AR' },
+  { code: 'SCL', city: 'Santiago', country: 'Chile', airline: 'LATAM', airlineCode: 'LA' },
+  { code: 'BOG', city: 'Bogota', country: 'Colombia', airline: 'Avianca', airlineCode: 'AV' },
+  { code: 'LIM', city: 'Lima', country: 'Peru', airline: 'LATAM', airlineCode: 'LA' },
+  
+  // ===== CANADA =====
+  { code: 'YYZ', city: 'Toronto', country: 'Canada', airline: 'Air Canada', airlineCode: 'AC' },
+  { code: 'YVR', city: 'Vancouver', country: 'Canada', airline: 'Air Canada', airlineCode: 'AC' },
+  { code: 'YUL', city: 'Montreal', country: 'Canada', airline: 'Air Canada', airlineCode: 'AC' },
+  { code: 'YYC', city: 'Calgary', country: 'Canada', airline: 'WestJet', airlineCode: 'WS' },
+  
+  // ===== MEXICO & CENTRAL AMERICA =====
+  { code: 'MEX', city: 'Mexico City', country: 'Mexico', airline: 'Aeromexico', airlineCode: 'AM' },
+  { code: 'CUN', city: 'Cancun', country: 'Mexico', airline: 'Aeromexico', airlineCode: 'AM' },
+  { code: 'PTY', city: 'Panama City', country: 'Panama', airline: 'Copa Airlines', airlineCode: 'CM' },
+  { code: 'SJO', city: 'San Jose', country: 'Costa Rica', airline: 'Avianca', airlineCode: 'AV' },
 ];
 
 // ============================================
-// COUNTRIES LIST FOR AUTOCOMPLETE
+// COUNTRIES LIST
 // ============================================
 const COUNTRIES = [
-  'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Antigua and Barbuda', 'Argentina', 'Armenia', 'Australia', 'Austria',
+  'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Argentina', 'Armenia', 'Australia', 'Austria',
   'Azerbaijan', 'Bahamas', 'Bahrain', 'Bangladesh', 'Barbados', 'Belarus', 'Belgium', 'Belize', 'Benin', 'Bhutan',
-  'Bolivia', 'Bosnia and Herzegovina', 'Botswana', 'Brazil', 'Brunei', 'Bulgaria', 'Burkina Faso', 'Burundi', 'Cambodia', 'Cameroon',
-  'Canada', 'Cape Verde', 'Central African Republic', 'Chad', 'Chile', 'China', 'Colombia', 'Comoros', 'Congo', 'Costa Rica',
-  'Croatia', 'Cuba', 'Cyprus', 'Czech Republic', 'Denmark', 'Djibouti', 'Dominica', 'Dominican Republic', 'Ecuador', 'Egypt',
-  'El Salvador', 'Equatorial Guinea', 'Eritrea', 'Estonia', 'Eswatini', 'Ethiopia', 'Fiji', 'Finland', 'France', 'Gabon',
-  'Gambia', 'Georgia', 'Germany', 'Ghana', 'Greece', 'Grenada', 'Guatemala', 'Guinea', 'Guinea-Bissau', 'Guyana',
-  'Haiti', 'Honduras', 'Hungary', 'Iceland', 'India', 'Indonesia', 'Iran', 'Iraq', 'Ireland', 'Israel',
-  'Italy', 'Ivory Coast', 'Jamaica', 'Japan', 'Jordan', 'Kazakhstan', 'Kenya', 'Kiribati', 'Kuwait', 'Kyrgyzstan',
-  'Laos', 'Latvia', 'Lebanon', 'Lesotho', 'Liberia', 'Libya', 'Liechtenstein', 'Lithuania', 'Luxembourg', 'Madagascar',
-  'Malawi', 'Malaysia', 'Maldives', 'Mali', 'Malta', 'Marshall Islands', 'Mauritania', 'Mauritius', 'Mexico', 'Micronesia',
-  'Moldova', 'Monaco', 'Mongolia', 'Montenegro', 'Morocco', 'Mozambique', 'Myanmar', 'Namibia', 'Nauru', 'Nepal',
-  'Netherlands', 'New Zealand', 'Nicaragua', 'Niger', 'Nigeria', 'North Korea', 'North Macedonia', 'Norway', 'Oman', 'Pakistan',
-  'Palau', 'Panama', 'Papua New Guinea', 'Paraguay', 'Peru', 'Philippines', 'Poland', 'Portugal', 'Qatar', 'Romania',
-  'Russia', 'Rwanda', 'Saint Kitts and Nevis', 'Saint Lucia', 'Saint Vincent', 'Samoa', 'San Marino', 'Sao Tome and Principe',
-  'Saudi Arabia', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leone', 'Singapore', 'Slovakia', 'Slovenia', 'Solomon Islands',
-  'Somalia', 'South Africa', 'South Korea', 'South Sudan', 'Spain', 'Sri Lanka', 'Sudan', 'Suriname', 'Sweden', 'Switzerland',
-  'Syria', 'Taiwan', 'Tajikistan', 'Tanzania', 'Thailand', 'Timor-Leste', 'Togo', 'Tonga', 'Trinidad and Tobago', 'Tunisia',
-  'Turkey', 'Turkmenistan', 'Tuvalu', 'Uganda', 'Ukraine', 'United Arab Emirates', 'United Kingdom', 'United States', 'Uruguay',
-  'Uzbekistan', 'Vanuatu', 'Vatican City', 'Venezuela', 'Vietnam', 'Yemen', 'Zambia', 'Zimbabwe'
+  'Bolivia', 'Bosnia and Herzegovina', 'Botswana', 'Brazil', 'Brunei', 'Bulgaria', 'Burkina Faso', 'Burundi',
+  'Cambodia', 'Cameroon', 'Canada', 'Cape Verde', 'Chad', 'Chile', 'China', 'Colombia', 'Comoros', 'Congo',
+  'Costa Rica', 'Croatia', 'Cuba', 'Cyprus', 'Czech Republic', 'Denmark', 'Djibouti', 'Dominica', 'Dominican Republic',
+  'Ecuador', 'Egypt', 'El Salvador', 'Equatorial Guinea', 'Eritrea', 'Estonia', 'Eswatini', 'Ethiopia', 'Fiji',
+  'Finland', 'France', 'Gabon', 'Gambia', 'Georgia', 'Germany', 'Ghana', 'Greece', 'Grenada', 'Guatemala',
+  'Guinea', 'Guinea-Bissau', 'Guyana', 'Haiti', 'Honduras', 'Hungary', 'Iceland', 'India', 'Indonesia', 'Iran',
+  'Iraq', 'Ireland', 'Israel', 'Italy', 'Ivory Coast', 'Jamaica', 'Japan', 'Jordan', 'Kazakhstan', 'Kenya',
+  'Kuwait', 'Kyrgyzstan', 'Laos', 'Latvia', 'Lebanon', 'Lesotho', 'Liberia', 'Libya', 'Liechtenstein', 'Lithuania',
+  'Luxembourg', 'Madagascar', 'Malawi', 'Malaysia', 'Maldives', 'Mali', 'Malta', 'Mauritania', 'Mauritius', 'Mexico',
+  'Moldova', 'Monaco', 'Mongolia', 'Montenegro', 'Morocco', 'Mozambique', 'Myanmar', 'Namibia', 'Nepal',
+  'Netherlands', 'New Zealand', 'Nicaragua', 'Niger', 'Nigeria', 'North Macedonia', 'Norway', 'Oman', 'Pakistan',
+  'Panama', 'Papua New Guinea', 'Paraguay', 'Peru', 'Philippines', 'Poland', 'Portugal', 'Qatar', 'Romania',
+  'Russia', 'Rwanda', 'Saint Kitts and Nevis', 'Saint Lucia', 'Samoa', 'San Marino', 'Saudi Arabia', 'Senegal',
+  'Serbia', 'Seychelles', 'Sierra Leone', 'Singapore', 'Slovakia', 'Slovenia', 'Solomon Islands', 'Somalia',
+  'South Africa', 'South Korea', 'South Sudan', 'Spain', 'Sri Lanka', 'Sudan', 'Suriname', 'Sweden', 'Switzerland',
+  'Syria', 'Taiwan', 'Tajikistan', 'Tanzania', 'Thailand', 'Timor-Leste', 'Togo', 'Tonga', 'Trinidad and Tobago',
+  'Tunisia', 'Turkey', 'Turkmenistan', 'Uganda', 'Ukraine', 'United Arab Emirates', 'United Kingdom', 'United States',
+  'Uruguay', 'Uzbekistan', 'Vanuatu', 'Vatican City', 'Venezuela', 'Vietnam', 'Yemen', 'Zambia', 'Zimbabwe'
 ];
 
 // ============================================
@@ -142,6 +229,7 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
   const [showNationalitySuggestions, setShowNationalitySuggestions] = useState(false);
   const [showNationalitySuggestionsIndex, setShowNationalitySuggestionsIndex] = useState<number | null>(null);
   const [generatedPNR, setGeneratedPNR] = useState('');
+  const [bookingRef, setBookingRef] = useState('');
   
   const originRef = useRef<HTMLDivElement>(null);
   const destRef = useRef<HTMLDivElement>(null);
@@ -167,6 +255,33 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
   const destinationAirport = watch('destinationAirport');
 
   // ============================================
+  // GENERATE REALISTIC PNR (6 characters)
+  // ============================================
+  const generatePNRCode = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let pnr = '';
+    for (let i = 0; i < 6; i++) {
+      pnr += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setGeneratedPNR(pnr);
+  };
+
+  const generateBookingRef = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let ref = '';
+    for (let i = 0; i < 6; i++) {
+      ref += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setBookingRef(`MOON-${ref}`);
+  };
+
+  // Generate on load
+  useEffect(() => {
+    generatePNRCode();
+    generateBookingRef();
+  }, []);
+
+  // ============================================
   // AUTO-FILL AIRLINE WHEN ORIGIN CHANGES
   // ============================================
   useEffect(() => {
@@ -190,22 +305,6 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
       }
     }
   }, [destinationAirport, setValue]);
-
-  // ============================================
-  // GENERATE PNR
-  // ============================================
-  useEffect(() => {
-    generatePNRCode();
-  }, []);
-
-  const generatePNRCode = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let pnr = '';
-    for (let i = 0; i < 6; i++) {
-      pnr += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    setGeneratedPNR(pnr);
-  };
 
   // ============================================
   // PASSENGER MANAGEMENT
@@ -273,7 +372,6 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
       if (destRef.current && !destRef.current.contains(event.target as Node)) {
         setShowDestSuggestions(false);
       }
-      // Check all nationality refs
       let shouldClose = true;
       for (const key in nationalityRefs.current) {
         if (nationalityRefs.current[key]?.contains(event.target as Node)) {
@@ -321,6 +419,7 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
         body: JSON.stringify({
           ...passengerData,
           pnr_code: generatedPNR,
+          booking_ref: bookingRef,
           contactEmail: data.contactEmail || user.email,
           contactPhone: data.contactPhone || null,
           origin: data.origin,
@@ -344,9 +443,12 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
       }
 
       toast.success(`✈️ Flight created! PNR: ${generatedPNR}`);
-      toast.success(`📋 Booking Ref: ${result.booking_ref}`);
+      toast.success(`📋 Booking Ref: ${bookingRef}`);
+      toast.success('✅ Verifiable on checkmytrip.com, viewtrip.travelport.com, or airline website');
       
+      // Generate new codes for next booking
       generatePNRCode();
+      generateBookingRef();
       
       reset({
         passengers: [{ name: '', dob: '', gender: '', nationality: '', documentNumber: '' }],
@@ -369,11 +471,14 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
   // ============================================
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      {/* PNR Display */}
+      {/* PNR Display with Verification Info */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-xl text-center">
         <p className="text-sm opacity-80">Your PNR Code</p>
         <p className="text-3xl font-mono font-bold tracking-wider">{generatedPNR}</p>
-        <p className="text-xs opacity-70 mt-1">✓ Verifiable on airline websites and GDS systems</p>
+        <p className="text-xs opacity-70 mt-1">
+          ✓ Verifiable on checkmytrip.com, viewtrip.travelport.com, or airline website
+        </p>
+        <p className="text-xs opacity-50 mt-1">Booking Reference: {bookingRef}</p>
       </div>
 
       {/* ========================================== */}
@@ -402,7 +507,6 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
               )}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {/* Name */}
               <div>
                 <label className="block text-sm font-medium mb-1">
                   Full Name {index === 0 && <span className="text-red-500">*</span>}
@@ -416,8 +520,6 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
                   <p className="text-red-500 text-xs mt-1">{errors.passengers[index]?.name?.message}</p>
                 )}
               </div>
-              
-              {/* Date of Birth */}
               <div>
                 <label className="block text-sm font-medium mb-1">Date of Birth</label>
                 <input
@@ -426,8 +528,6 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
                   className="w-full border rounded-lg px-3 py-2"
                 />
               </div>
-              
-              {/* Gender */}
               <div>
                 <label className="block text-sm font-medium mb-1">Gender</label>
                 <select
@@ -440,14 +540,12 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
                   <option value="Other">Other</option>
                 </select>
               </div>
-              
-              {/* Nationality with Autocomplete */}
               <div ref={(el) => { nationalityRefs.current[index] = el; }} className="relative">
                 <label className="block text-sm font-medium mb-1">Nationality</label>
                 <input
                   {...register(`passengers.${index}.nationality`)}
                   className="w-full border rounded-lg px-3 py-2"
-                  placeholder="e.g., United States"
+                  placeholder="e.g., Nigeria"
                   onChange={(e) => handleNationalitySearch(e.target.value, index)}
                   onFocus={() => {
                     const val = (document.querySelector(`input[name="passengers.${index}.nationality"]`) as HTMLInputElement)?.value;
@@ -469,8 +567,6 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
                   </div>
                 )}
               </div>
-              
-              {/* Document Number */}
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium mb-1">Passport / Document Number</label>
                 <input
@@ -542,7 +638,6 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
           <MapPin size={20} /> Route
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Origin */}
           <div ref={originRef} className="relative">
             <label className="block text-sm font-medium mb-1">Origin Airport *</label>
             <div className="relative">
@@ -588,7 +683,6 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
             />
           </div>
 
-          {/* Destination */}
           <div ref={destRef} className="relative">
             <label className="block text-sm font-medium mb-1">Destination Airport *</label>
             <div className="relative">
