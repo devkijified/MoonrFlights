@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
 import { supabase } from '@/lib/supabase/client';
-import { Plane, Calendar, MapPin, User, Mail, Phone, Plus, X } from 'lucide-react';
+import { Plane, Calendar, MapPin, User, Mail, Plus, X } from 'lucide-react';
 
 // Schema with dynamic passenger validation
 const passengerSchema = z.object({
