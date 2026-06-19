@@ -1,54 +1,30 @@
+// app/api/flights/create/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('📝 Flight creation started');
+    const body = await request.json();
+    console.log('📝 Creating flight for:', body.passenger1Name);
     
-    // 1. Parse request body
-    const body = await request.json().catch(() => null);
-    if (!body) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
-    }
-    
-    console.log('📦 Request body:', body);
-    
-    // 2. Get Supabase client
     const supabase = await createClient();
     
-    // 3. Get authenticated user
+    // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
-    if (authError) {
+    if (authError || !user) {
       console.error('❌ Auth error:', authError);
-      return NextResponse.json({ error: 'Authentication error: ' + authError.message }, { status: 401 });
-    }
-    
-    if (!user) {
-      console.error('❌ No user found');
-      return NextResponse.json({ error: 'Unauthorized - Please sign in' }, { status: 401 });
-    }
-    
-    console.log('👤 User:', user.email);
-    
-    // 4. Validate required fields
-    const requiredFields = ['passenger1Name', 'origin', 'originAirport', 'destination', 'destinationAirport', 'departureDate', 'airline', 'flightNumber'];
-    const missingFields = requiredFields.filter(field => !body[field]);
-    
-    if (missingFields.length > 0) {
       return NextResponse.json({ 
-        error: 'Missing required fields', 
-        fields: missingFields 
-      }, { status: 400 });
+        error: 'Unauthorized - Please sign in',
+        details: authError?.message 
+      }, { status: 401 });
     }
-    
-    // 5. Generate booking references
+
+    // Generate references
     const bookingRef = `MOON-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
     const pnrCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-    
-    console.log('🔑 Generated:', { bookingRef, pnrCode });
-    
-    // 6. Prepare flight data
+
+    // Prepare flight data
     const flightData = {
       user_id: user.id,
       pnr_code: pnrCode,
@@ -80,26 +56,27 @@ export async function POST(request: NextRequest) {
       is_paid: false,
       ip_address: request.headers.get('x-forwarded-for') || '',
     };
-    
-    console.log('💾 Inserting flight data...');
-    
-    // 7. Insert into Supabase
+
+    console.log('💾 Inserting flight:', flightData.booking_ref);
+
+    // Insert into Supabase
     const { data: flight, error: insertError } = await supabase
       .from('flights')
       .insert(flightData)
       .select()
       .single();
-    
+
     if (insertError) {
       console.error('❌ Database error:', insertError);
       return NextResponse.json({ 
         error: 'Database error: ' + insertError.message,
-        code: insertError.code
+        code: insertError.code,
+        details: insertError.details
       }, { status: 500 });
     }
-    
-    console.log('✅ Flight created successfully:', flight.id);
-    
+
+    console.log('✅ Flight created:', flight.id);
+
     return NextResponse.json({
       success: true,
       booking_ref: bookingRef,
@@ -107,16 +84,15 @@ export async function POST(request: NextRequest) {
       flight: flight,
       message: 'Flight created successfully!'
     });
-    
+
   } catch (error: any) {
-    console.error('❌ Unexpected error:', error);
+    console.error('❌ Server error:', error);
     return NextResponse.json({ 
       error: 'Server error: ' + (error.message || 'Unknown error')
     }, { status: 500 });
   }
 }
 
-// Handle OPTIONS request for CORS
 export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
@@ -126,7 +102,6 @@ export async function OPTIONS() {
   });
 }
 
-// Handle GET request (return method not allowed)
 export async function GET() {
   return NextResponse.json({ 
     error: 'Method not allowed. Use POST to create a flight.',
