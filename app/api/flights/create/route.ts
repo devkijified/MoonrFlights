@@ -1,4 +1,3 @@
-// app/api/flights/create/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
@@ -24,7 +23,7 @@ export async function POST(request: NextRequest) {
     const bookingRef = `MOON-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
     const pnrCode = Math.random().toString(36).substring(2, 8).toUpperCase();
 
-    // Prepare flight data
+    // Prepare flight data - MATCH YOUR EXACT COLUMN NAMES
     const flightData = {
       user_id: user.id,
       pnr_code: pnrCode,
@@ -32,7 +31,7 @@ export async function POST(request: NextRequest) {
       airline: body.airline,
       airline_code: body.airlineCode || 'DL',
       flight_number: body.flightNumber,
-      flight_date: body.departureDate,
+      flight_date: body.departureDate,  // ← Using flight_date, not departure_date
       flight_time: body.departureTime || '12:00',
       origin: body.origin,
       origin_airport: body.originAirport.toUpperCase(),
@@ -57,7 +56,7 @@ export async function POST(request: NextRequest) {
       ip_address: request.headers.get('x-forwarded-for') || '',
     };
 
-    console.log('💾 Inserting flight:', flightData.booking_ref);
+    console.log('💾 Inserting flight:', flightData);
 
     // Insert into Supabase
     const { data: flight, error: insertError } = await supabase
@@ -71,7 +70,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ 
         error: 'Database error: ' + insertError.message,
         code: insertError.code,
-        details: insertError.details
+        details: insertError.details,
+        hint: insertError.hint
       }, { status: 500 });
     }
 
