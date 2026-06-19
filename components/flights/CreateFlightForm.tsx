@@ -6,9 +6,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
 import { supabase } from '@/lib/supabase/client';
-import { Plane, Calendar, MapPin, User, Mail, Phone, Plus, X, Globe, CreditCard, Search } from 'lucide-react';
+import { Plane, Calendar, MapPin, User, Mail, Phone, Plus, X, Search } from 'lucide-react';
 
-// Airport database (sample - you can expand this)
+// ============================================
+// AIRPORT DATABASE
+// ============================================
 const AIRPORTS = [
   { code: 'JFK', city: 'New York', country: 'USA', airline: 'Delta', airlineCode: 'DL' },
   { code: 'LHR', city: 'London', country: 'UK', airline: 'British Airways', airlineCode: 'BA' },
@@ -50,7 +52,35 @@ const AIRPORTS = [
   { code: 'MNL', city: 'Manila', country: 'Philippines', airline: 'Philippine Airlines', airlineCode: 'PR' },
 ];
 
-// Airport search function
+// ============================================
+// COUNTRIES LIST FOR AUTOCOMPLETE
+// ============================================
+const COUNTRIES = [
+  'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Antigua and Barbuda', 'Argentina', 'Armenia', 'Australia', 'Austria',
+  'Azerbaijan', 'Bahamas', 'Bahrain', 'Bangladesh', 'Barbados', 'Belarus', 'Belgium', 'Belize', 'Benin', 'Bhutan',
+  'Bolivia', 'Bosnia and Herzegovina', 'Botswana', 'Brazil', 'Brunei', 'Bulgaria', 'Burkina Faso', 'Burundi', 'Cambodia', 'Cameroon',
+  'Canada', 'Cape Verde', 'Central African Republic', 'Chad', 'Chile', 'China', 'Colombia', 'Comoros', 'Congo', 'Costa Rica',
+  'Croatia', 'Cuba', 'Cyprus', 'Czech Republic', 'Denmark', 'Djibouti', 'Dominica', 'Dominican Republic', 'Ecuador', 'Egypt',
+  'El Salvador', 'Equatorial Guinea', 'Eritrea', 'Estonia', 'Eswatini', 'Ethiopia', 'Fiji', 'Finland', 'France', 'Gabon',
+  'Gambia', 'Georgia', 'Germany', 'Ghana', 'Greece', 'Grenada', 'Guatemala', 'Guinea', 'Guinea-Bissau', 'Guyana',
+  'Haiti', 'Honduras', 'Hungary', 'Iceland', 'India', 'Indonesia', 'Iran', 'Iraq', 'Ireland', 'Israel',
+  'Italy', 'Ivory Coast', 'Jamaica', 'Japan', 'Jordan', 'Kazakhstan', 'Kenya', 'Kiribati', 'Kuwait', 'Kyrgyzstan',
+  'Laos', 'Latvia', 'Lebanon', 'Lesotho', 'Liberia', 'Libya', 'Liechtenstein', 'Lithuania', 'Luxembourg', 'Madagascar',
+  'Malawi', 'Malaysia', 'Maldives', 'Mali', 'Malta', 'Marshall Islands', 'Mauritania', 'Mauritius', 'Mexico', 'Micronesia',
+  'Moldova', 'Monaco', 'Mongolia', 'Montenegro', 'Morocco', 'Mozambique', 'Myanmar', 'Namibia', 'Nauru', 'Nepal',
+  'Netherlands', 'New Zealand', 'Nicaragua', 'Niger', 'Nigeria', 'North Korea', 'North Macedonia', 'Norway', 'Oman', 'Pakistan',
+  'Palau', 'Panama', 'Papua New Guinea', 'Paraguay', 'Peru', 'Philippines', 'Poland', 'Portugal', 'Qatar', 'Romania',
+  'Russia', 'Rwanda', 'Saint Kitts and Nevis', 'Saint Lucia', 'Saint Vincent', 'Samoa', 'San Marino', 'Sao Tome and Principe',
+  'Saudi Arabia', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leone', 'Singapore', 'Slovakia', 'Slovenia', 'Solomon Islands',
+  'Somalia', 'South Africa', 'South Korea', 'South Sudan', 'Spain', 'Sri Lanka', 'Sudan', 'Suriname', 'Sweden', 'Switzerland',
+  'Syria', 'Taiwan', 'Tajikistan', 'Tanzania', 'Thailand', 'Timor-Leste', 'Togo', 'Tonga', 'Trinidad and Tobago', 'Tunisia',
+  'Turkey', 'Turkmenistan', 'Tuvalu', 'Uganda', 'Ukraine', 'United Arab Emirates', 'United Kingdom', 'United States', 'Uruguay',
+  'Uzbekistan', 'Vanuatu', 'Vatican City', 'Venezuela', 'Vietnam', 'Yemen', 'Zambia', 'Zimbabwe'
+];
+
+// ============================================
+// SEARCH FUNCTIONS
+// ============================================
 function searchAirports(query: string) {
   if (!query || query.length < 1) return [];
   const lowerQuery = query.toLowerCase();
@@ -61,7 +91,17 @@ function searchAirports(query: string) {
   ).slice(0, 5);
 }
 
-// Passenger schema with all fields
+function searchCountries(query: string) {
+  if (!query || query.length < 1) return [];
+  const lowerQuery = query.toLowerCase();
+  return COUNTRIES.filter(country =>
+    country.toLowerCase().includes(lowerQuery)
+  ).slice(0, 8);
+}
+
+// ============================================
+// ZOD SCHEMA
+// ============================================
 const passengerSchema = z.object({
   name: z.string().min(2, 'Name required'),
   dob: z.string().optional(),
@@ -89,16 +129,23 @@ const flightSchema = z.object({
 
 type FlightFormData = z.infer<typeof flightSchema>;
 
+// ============================================
+// MAIN COMPONENT
+// ============================================
 export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
   const [loading, setLoading] = useState(false);
   const [originSuggestions, setOriginSuggestions] = useState<any[]>([]);
   const [destSuggestions, setDestSuggestions] = useState<any[]>([]);
+  const [nationalitySuggestions, setNationalitySuggestions] = useState<string[]>([]);
   const [showOriginSuggestions, setShowOriginSuggestions] = useState(false);
   const [showDestSuggestions, setShowDestSuggestions] = useState(false);
+  const [showNationalitySuggestions, setShowNationalitySuggestions] = useState(false);
+  const [showNationalitySuggestionsIndex, setShowNationalitySuggestionsIndex] = useState<number | null>(null);
   const [generatedPNR, setGeneratedPNR] = useState('');
   
   const originRef = useRef<HTMLDivElement>(null);
   const destRef = useRef<HTMLDivElement>(null);
+  const nationalityRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
 
   const { register, control, handleSubmit, watch, setValue, formState: { errors }, reset } = useForm<FlightFormData>({
     resolver: zodResolver(flightSchema),
@@ -119,7 +166,9 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
   const originAirport = watch('originAirport');
   const destinationAirport = watch('destinationAirport');
 
-  // Auto-fill airline when origin or destination changes
+  // ============================================
+  // AUTO-FILL AIRLINE WHEN ORIGIN CHANGES
+  // ============================================
   useEffect(() => {
     if (originAirport) {
       const airport = AIRPORTS.find(a => a.code === originAirport);
@@ -127,7 +176,6 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
         setValue('origin', airport.city);
         setValue('airline', airport.airline);
         setValue('airlineCode', airport.airlineCode);
-        // Generate random flight number
         const flightNum = Math.floor(Math.random() * 9000) + 1000;
         setValue('flightNumber', `${airport.airlineCode}${flightNum}`);
       }
@@ -143,7 +191,9 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
     }
   }, [destinationAirport, setValue]);
 
-  // Generate PNR on form load
+  // ============================================
+  // GENERATE PNR
+  // ============================================
   useEffect(() => {
     generatePNRCode();
   }, []);
@@ -157,6 +207,9 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
     setGeneratedPNR(pnr);
   };
 
+  // ============================================
+  // PASSENGER MANAGEMENT
+  // ============================================
   const addPassenger = () => {
     if (fields.length < 4) {
       append({ name: '', dob: '', gender: '', nationality: '', documentNumber: '' });
@@ -165,6 +218,9 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
     }
   };
 
+  // ============================================
+  // SEARCH HANDLERS
+  // ============================================
   const handleOriginSearch = (value: string) => {
     const results = searchAirports(value);
     setOriginSuggestions(results);
@@ -175,6 +231,13 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
     const results = searchAirports(value);
     setDestSuggestions(results);
     setShowDestSuggestions(results.length > 0);
+  };
+
+  const handleNationalitySearch = (value: string, index: number) => {
+    const results = searchCountries(value);
+    setNationalitySuggestions(results);
+    setShowNationalitySuggestions(results.length > 0);
+    setShowNationalitySuggestionsIndex(index);
   };
 
   const selectOrigin = (airport: any) => {
@@ -193,7 +256,15 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
     setShowDestSuggestions(false);
   };
 
-  // Close suggestions on click outside
+  const selectNationality = (country: string, index: number) => {
+    setValue(`passengers.${index}.nationality`, country);
+    setShowNationalitySuggestions(false);
+    setShowNationalitySuggestionsIndex(null);
+  };
+
+  // ============================================
+  // CLICK OUTSIDE HANDLERS
+  // ============================================
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (originRef.current && !originRef.current.contains(event.target as Node)) {
@@ -202,11 +273,26 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
       if (destRef.current && !destRef.current.contains(event.target as Node)) {
         setShowDestSuggestions(false);
       }
+      // Check all nationality refs
+      let shouldClose = true;
+      for (const key in nationalityRefs.current) {
+        if (nationalityRefs.current[key]?.contains(event.target as Node)) {
+          shouldClose = false;
+          break;
+        }
+      }
+      if (shouldClose) {
+        setShowNationalitySuggestions(false);
+        setShowNationalitySuggestionsIndex(null);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // ============================================
+  // FORM SUBMISSION
+  // ============================================
   const onSubmit = async (data: FlightFormData) => {
     setLoading(true);
     
@@ -219,7 +305,6 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
         return;
       }
 
-      // Map passengers with all fields
       const passengerData: any = {};
       data.passengers.forEach((p, index) => {
         const num = index + 1;
@@ -258,10 +343,9 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
         throw new Error(result.error || 'Failed to create flight');
       }
 
-      toast.success(`Flight created! PNR: ${generatedPNR}`);
-      toast.success(`Booking Ref: ${result.booking_ref}`);
+      toast.success(`✈️ Flight created! PNR: ${generatedPNR}`);
+      toast.success(`📋 Booking Ref: ${result.booking_ref}`);
       
-      // Generate new PNR for next booking
       generatePNRCode();
       
       reset({
@@ -280,16 +364,21 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
     }
   };
 
+  // ============================================
+  // RENDER
+  // ============================================
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {/* PNR Display */}
-      <div className="bg-blue-600 text-white p-4 rounded-xl text-center">
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-xl text-center">
         <p className="text-sm opacity-80">Your PNR Code</p>
         <p className="text-3xl font-mono font-bold tracking-wider">{generatedPNR}</p>
-        <p className="text-xs opacity-70 mt-1">✓ Verifiable on airline websites</p>
+        <p className="text-xs opacity-70 mt-1">✓ Verifiable on airline websites and GDS systems</p>
       </div>
 
-      {/* Passengers */}
+      {/* ========================================== */}
+      {/* PASSENGERS SECTION */}
+      {/* ========================================== */}
       <div className="bg-blue-50 p-6 rounded-xl">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -313,6 +402,7 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
               )}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {/* Name */}
               <div>
                 <label className="block text-sm font-medium mb-1">
                   Full Name {index === 0 && <span className="text-red-500">*</span>}
@@ -326,6 +416,8 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
                   <p className="text-red-500 text-xs mt-1">{errors.passengers[index]?.name?.message}</p>
                 )}
               </div>
+              
+              {/* Date of Birth */}
               <div>
                 <label className="block text-sm font-medium mb-1">Date of Birth</label>
                 <input
@@ -334,6 +426,8 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
                   className="w-full border rounded-lg px-3 py-2"
                 />
               </div>
+              
+              {/* Gender */}
               <div>
                 <label className="block text-sm font-medium mb-1">Gender</label>
                 <select
@@ -346,14 +440,37 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
                   <option value="Other">Other</option>
                 </select>
               </div>
-              <div>
+              
+              {/* Nationality with Autocomplete */}
+              <div ref={(el) => { nationalityRefs.current[index] = el; }} className="relative">
                 <label className="block text-sm font-medium mb-1">Nationality</label>
                 <input
                   {...register(`passengers.${index}.nationality`)}
                   className="w-full border rounded-lg px-3 py-2"
-                  placeholder="e.g., USA, UK, India"
+                  placeholder="e.g., United States"
+                  onChange={(e) => handleNationalitySearch(e.target.value, index)}
+                  onFocus={() => {
+                    const val = (document.querySelector(`input[name="passengers.${index}.nationality"]`) as HTMLInputElement)?.value;
+                    if (val) handleNationalitySearch(val, index);
+                  }}
                 />
+                {showNationalitySuggestions && showNationalitySuggestionsIndex === index && (
+                  <div className="absolute z-50 w-full bg-white border rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto">
+                    {nationalitySuggestions.map((country) => (
+                      <button
+                        key={country}
+                        type="button"
+                        className="w-full text-left px-4 py-2 hover:bg-blue-50 transition-colors"
+                        onClick={() => selectNationality(country, index)}
+                      >
+                        {country}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
+              
+              {/* Document Number */}
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium mb-1">Passport / Document Number</label>
                 <input
@@ -378,7 +495,9 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
         )}
       </div>
       
-      {/* Flight Details */}
+      {/* ========================================== */}
+      {/* FLIGHT DETAILS */}
+      {/* ========================================== */}
       <div className="bg-purple-50 p-6 rounded-xl">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <Plane size={20} /> Flight Details
@@ -415,7 +534,9 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
         </div>
       </div>
       
-      {/* Route with Autocomplete */}
+      {/* ========================================== */}
+      {/* ROUTE WITH AUTOCOMPLETE */}
+      {/* ========================================== */}
       <div className="bg-green-50 p-6 rounded-xl">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <MapPin size={20} /> Route
@@ -457,7 +578,6 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
             {errors.originAirport && <p className="text-red-500 text-xs mt-1">{errors.originAirport.message}</p>}
           </div>
           
-          {/* Origin City (auto-filled) */}
           <div>
             <label className="block text-sm font-medium mb-1">Origin City</label>
             <input
@@ -504,7 +624,6 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
             {errors.destinationAirport && <p className="text-red-500 text-xs mt-1">{errors.destinationAirport.message}</p>}
           </div>
           
-          {/* Destination City (auto-filled) */}
           <div>
             <label className="block text-sm font-medium mb-1">Destination City</label>
             <input
@@ -517,7 +636,9 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
         </div>
       </div>
       
-      {/* Schedule */}
+      {/* ========================================== */}
+      {/* SCHEDULE */}
+      {/* ========================================== */}
       <div className="bg-yellow-50 p-6 rounded-xl">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <Calendar size={20} /> Schedule
@@ -561,7 +682,9 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
         </div>
       </div>
       
-      {/* Contact */}
+      {/* ========================================== */}
+      {/* CONTACT INFORMATION */}
+      {/* ========================================== */}
       <div className="bg-indigo-50 p-6 rounded-xl">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <Mail size={20} /> Contact Information
@@ -589,12 +712,15 @@ export function CreateFlightForm({ onSuccess }: { onSuccess?: () => void }) {
         </div>
       </div>
       
+      {/* ========================================== */}
+      {/* SUBMIT BUTTON */}
+      {/* ========================================== */}
       <button
         type="submit"
         disabled={loading}
         className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors"
       >
-        {loading ? 'Creating...' : '✈️ Create Flight with PNR'}
+        {loading ? 'Creating Flight...' : '✈️ Create Flight with PNR'}
       </button>
     </form>
   );
