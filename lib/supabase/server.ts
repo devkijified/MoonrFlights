@@ -5,10 +5,6 @@ import { cookies } from 'next/headers'
 export const createClient = async () => {
   const cookieStore = await cookies()
 
-  // Debug: Check if service role key exists
-  console.log('🔑 Service role key exists:', !!process.env.SUPABASE_SERVICE_ROLE_KEY)
-  console.log('🔑 Supabase URL exists:', !!process.env.NEXT_PUBLIC_SUPABASE_URL)
-
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!, // Use service role key for server
