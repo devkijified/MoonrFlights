@@ -32,28 +32,28 @@ export async function POST(request: NextRequest) {
       destination: body.destination,
       destination_airport: body.destinationAirport.toUpperCase(),
       
-      // Passenger 1
+      // Passenger 1 - All fields
       passenger1_name: body.passenger1Name,
       passenger1_dob: body.passenger1Dob || null,
       passenger1_gender: body.passenger1Gender || null,
       passenger1_nationality: body.passenger1Nationality || null,
       passenger1_document_number: body.passenger1DocumentNumber || null,
       
-      // Passenger 2
+      // Passenger 2 - All fields
       passenger2_name: body.passenger2Name || null,
       passenger2_dob: body.passenger2Dob || null,
       passenger2_gender: body.passenger2Gender || null,
       passenger2_nationality: body.passenger2Nationality || null,
       passenger2_document_number: body.passenger2DocumentNumber || null,
       
-      // Passenger 3
+      // Passenger 3 - All fields
       passenger3_name: body.passenger3Name || null,
       passenger3_dob: body.passenger3Dob || null,
       passenger3_gender: body.passenger3Gender || null,
       passenger3_nationality: body.passenger3Nationality || null,
       passenger3_document_number: body.passenger3DocumentNumber || null,
       
-      // Passenger 4
+      // Passenger 4 - All fields
       passenger4_name: body.passenger4Name || null,
       passenger4_dob: body.passenger4Dob || null,
       passenger4_gender: body.passenger4Gender || null,
@@ -62,6 +62,8 @@ export async function POST(request: NextRequest) {
       
       contact_email: body.contactEmail || user.email,
       contact_phone: body.contactPhone || null,
+      is_round_trip: body.isRoundTrip || false,
+      return_date: body.returnDate || null,
       gds_system: 'manual',
       raw_pnr_data: JSON.stringify({ pnr: pnrCode, booking_ref: bookingRef }),
       ticketing_time_limit: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
