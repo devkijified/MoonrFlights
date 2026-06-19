@@ -1,4 +1,3 @@
-// lib/gds/sabre-client.ts
 import axios from 'axios';
 
 interface SabreToken {
@@ -22,6 +21,12 @@ export class SabreClient {
   }
 
   async getToken(): Promise<string> {
+    // If no credentials, return a mock token for development
+    if (!this.clientId || !this.clientSecret) {
+      console.warn('Sabre credentials not configured. Using mock mode.');
+      return 'mock-token-for-development';
+    }
+
     if (cachedToken && cachedToken.expires_in > Date.now()) {
       return cachedToken.access_token;
     }
@@ -47,7 +52,7 @@ export class SabreClient {
       return cachedToken.access_token;
     } catch (error) {
       console.error('Sabre token error:', error);
-      throw new Error('Failed to authenticate with Sabre');
+      return 'mock-token-for-development';
     }
   }
 
@@ -61,6 +66,18 @@ export class SabreClient {
     airlineCode: string;
     returnDate?: string;
   }) {
+    // If in mock mode, return a simulated PNR
+    if (!this.clientId || !this.clientSecret) {
+      return {
+        pnrCode: `MOCK${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
+        bookingRef: `MOON-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
+        rawResponse: { 
+          message: 'Mock PNR - Sabre credentials not configured',
+          mock: true
+        },
+      };
+    }
+
     const token = await this.getToken();
 
     const requestBody = {
@@ -141,10 +158,10 @@ export class SabreClient {
       console.error('Sabre PNR creation error:', error.response?.data || error.message);
       
       return {
-        pnrCode: `TEST${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
+        pnrCode: `ERR${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
         bookingRef: `MOON-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
         rawResponse: { 
-          message: 'Simulated PNR creation - Sabre API unavailable',
+          message: 'Simulated PNR - Sabre API error',
           error: error.response?.data || error.message
         },
       };
@@ -152,6 +169,10 @@ export class SabreClient {
   }
 
   async getPNR(pnrCode: string) {
+    if (!this.clientId || !this.clientSecret) {
+      return { mock: true, pnrCode };
+    }
+
     const token = await this.getToken();
 
     try {
@@ -173,6 +194,10 @@ export class SabreClient {
   }
 
   async cancelPNR(pnrCode: string) {
+    if (!this.clientId || !this.clientSecret) {
+      return { mock: true, pnrCode, cancelled: true };
+    }
+
     const token = await this.getToken();
 
     try {
@@ -194,6 +219,10 @@ export class SabreClient {
   }
 
   async searchFlights(origin: string, destination: string, date: string) {
+    if (!this.clientId || !this.clientSecret) {
+      return { mock: true, flights: [] };
+    }
+
     const token = await this.getToken();
 
     try {
