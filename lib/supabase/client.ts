@@ -1,3 +1,4 @@
+// lib/supabase/client.ts
 import { createBrowserClient } from '@supabase/ssr'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -31,7 +32,12 @@ export async function isAdmin() {
 export async function getUserFlights() {
   try {
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return []
+    if (!user) {
+      console.log('No user found')
+      return []
+    }
+    
+    console.log('Fetching flights for user:', user.id)
     
     const { data, error } = await supabase
       .from('flights')
@@ -40,13 +46,14 @@ export async function getUserFlights() {
       .order('created_at', { ascending: false })
     
     if (error) {
-      console.warn('Get flights error:', error)
+      console.error('Get flights error:', error)
       return []
     }
     
+    console.log('Flights found:', data?.length)
     return data || []
   } catch (error) {
-    console.warn('Get flights failed:', error)
+    console.error('Get flights failed:', error)
     return []
   }
 }
@@ -54,24 +61,33 @@ export async function getUserFlights() {
 export async function getAllFlights() {
   try {
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return []
-    
-    const isAdminUser = await isAdmin()
-    if (!isAdminUser) return []
-    
-    const { data, error } = await supabase
-      .from('flights')
-      .select('*, profiles(email, full_name)')
-      .order('created_at', { ascending: false })
-    
-    if (error) {
-      console.warn('Get all flights error:', error)
+    if (!user) {
+      console.log('No user found for admin check')
       return []
     }
     
+    const isAdminUser = await isAdmin()
+    if (!isAdminUser) {
+      console.log('User is not admin')
+      return []
+    }
+    
+    console.log('Fetching all flights as admin')
+    
+    const { data, error } = await supabase
+      .from('flights')
+      .select('*')
+      .order('created_at', { ascending: false })
+    
+    if (error) {
+      console.error('Get all flights error:', error)
+      return []
+    }
+    
+    console.log('All flights found:', data?.length)
     return data || []
   } catch (error) {
-    console.warn('Get all flights failed:', error)
+    console.error('Get all flights failed:', error)
     return []
   }
 }
