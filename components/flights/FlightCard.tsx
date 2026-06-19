@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { Calendar, MapPin, Download, Trash2, Plane, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { format, isValid, parseISO } from 'date-fns';
+import { format, isValid } from 'date-fns';
 
 interface FlightCardProps {
   flight: any;
@@ -17,22 +17,16 @@ interface FlightCardProps {
 function safeFormatDate(dateString: string, formatStr: string = 'MMM dd, yyyy') {
   if (!dateString) return 'Date not set';
   try {
-    // Try parsing as ISO string first
     let date = new Date(dateString);
-    
-    // If invalid, try parsing as date-only string
     if (!isValid(date)) {
-      // Try parsing as YYYY-MM-DD
       const parts = dateString.split('T')[0].split('-');
       if (parts.length === 3) {
         date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
       }
     }
-    
     if (!isValid(date)) {
       return 'Invalid date';
     }
-    
     return format(date, formatStr);
   } catch {
     return 'Invalid date';
@@ -104,7 +98,6 @@ export function FlightCard({ flight, isAdmin, onDelete, onRefresh }: FlightCardP
     }
   };
 
-  // Format the departure date safely
   const departureDate = flight.flight_date || flight.departure_date;
   const formattedDate = safeFormatDate(departureDate);
   const createdDate = safeFormatDate(flight.created_at, 'MMM dd, yyyy');
@@ -227,13 +220,6 @@ export function FlightCard({ flight, isAdmin, onDelete, onRefresh }: FlightCardP
             {deleting ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
           </button>
         </div>
-      </div>
-      
-      {/* Footer Disclaimer */}
-      <div className="bg-yellow-50 px-6 py-3 border-t border-yellow-100">
-        <p className="text-xs text-yellow-700 text-center">
-          ⚠️ DOCUMENTATION ONLY - Not a real ticket. Cannot be used for boarding.
-        </p>
       </div>
     </div>
   );
