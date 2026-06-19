@@ -8,22 +8,16 @@ export async function POST(request: NextRequest) {
     
     const supabase = await createClient();
     
-    // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
-      console.error('❌ Auth error:', authError);
-      return NextResponse.json({ 
-        error: 'Unauthorized - Please sign in',
-        details: authError?.message 
-      }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Generate references
+    // Use provided PNR or generate one
+    const pnrCode = body.pnr_code || Math.random().toString(36).substring(2, 8).toUpperCase();
     const bookingRef = `MOON-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-    const pnrCode = Math.random().toString(36).substring(2, 8).toUpperCase();
 
-    // Prepare flight data - MATCH YOUR EXACT COLUMN NAMES
     const flightData = {
       user_id: user.id,
       pnr_code: pnrCode,
@@ -31,20 +25,41 @@ export async function POST(request: NextRequest) {
       airline: body.airline,
       airline_code: body.airlineCode || 'DL',
       flight_number: body.flightNumber,
-      flight_date: body.departureDate,  // ← Using flight_date, not departure_date
+      flight_date: body.departureDate,
       flight_time: body.departureTime || '12:00',
       origin: body.origin,
       origin_airport: body.originAirport.toUpperCase(),
       destination: body.destination,
       destination_airport: body.destinationAirport.toUpperCase(),
+      
+      // Passenger 1
       passenger1_name: body.passenger1Name,
       passenger1_dob: body.passenger1Dob || null,
+      passenger1_gender: body.passenger1Gender || null,
+      passenger1_nationality: body.passenger1Nationality || null,
+      passenger1_document_number: body.passenger1DocumentNumber || null,
+      
+      // Passenger 2
       passenger2_name: body.passenger2Name || null,
       passenger2_dob: body.passenger2Dob || null,
+      passenger2_gender: body.passenger2Gender || null,
+      passenger2_nationality: body.passenger2Nationality || null,
+      passenger2_document_number: body.passenger2DocumentNumber || null,
+      
+      // Passenger 3
       passenger3_name: body.passenger3Name || null,
       passenger3_dob: body.passenger3Dob || null,
+      passenger3_gender: body.passenger3Gender || null,
+      passenger3_nationality: body.passenger3Nationality || null,
+      passenger3_document_number: body.passenger3DocumentNumber || null,
+      
+      // Passenger 4
       passenger4_name: body.passenger4Name || null,
       passenger4_dob: body.passenger4Dob || null,
+      passenger4_gender: body.passenger4Gender || null,
+      passenger4_nationality: body.passenger4Nationality || null,
+      passenger4_document_number: body.passenger4DocumentNumber || null,
+      
       contact_email: body.contactEmail || user.email,
       contact_phone: body.contactPhone || null,
       gds_system: 'manual',
@@ -56,9 +71,6 @@ export async function POST(request: NextRequest) {
       ip_address: request.headers.get('x-forwarded-for') || '',
     };
 
-    console.log('💾 Inserting flight:', flightData);
-
-    // Insert into Supabase
     const { data: flight, error: insertError } = await supabase
       .from('flights')
       .insert(flightData)
@@ -68,14 +80,9 @@ export async function POST(request: NextRequest) {
     if (insertError) {
       console.error('❌ Database error:', insertError);
       return NextResponse.json({ 
-        error: 'Database error: ' + insertError.message,
-        code: insertError.code,
-        details: insertError.details,
-        hint: insertError.hint
+        error: 'Database error: ' + insertError.message 
       }, { status: 500 });
     }
-
-    console.log('✅ Flight created:', flight.id);
 
     return NextResponse.json({
       success: true,
